@@ -1,46 +1,42 @@
 //! By convention, main.zig is where your main function lives in the case that
 //! you are building an executable. If you are making a library, the convention
 //! is to delete this file and start with root.zig instead.
+const std = @import("std");
+const print = std.debug.print;
+
+var total: u32 = 0;
+
+const total_spaces = 16;
+const TsType = u16;
 
 pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
-
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
-
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
-
-    try bw.flush(); // Don't forget to flush!
+    var timer = try std.time.Timer.start();
+    var stdout = std.io.getStdOut().writer();
+    var curr_placement: TsType = 1;
+    inline for (0..(total_spaces / 2)) |_| {
+        place_queen(curr_placement, curr_placement, curr_placement, 0);
+        curr_placement = curr_placement << 1;
+    }
+    total *= 2;
+    const stop = timer.read();
+    try stdout.print("\n\ntotal: {d}\nin {d} ns\nor\n{d} secs\n", .{ total, stop, stop / std.time.ns_per_s });
 }
 
-test "simple test" {
-    var list = std.ArrayList(i32).init(std.testing.allocator);
-    defer list.deinit(); // Try commenting this out and see if zig detects the memory leak!
-    try list.append(42);
-    try std.testing.expectEqual(@as(i32, 42), list.pop());
-}
+fn place_queen(prev_left_diagonal: TsType, prev_right_diagonal: TsType, prev_x: TsType, comptime prev_y: TsType) void {
+    const left_diagonal = prev_left_diagonal << 1;
+    const right_diagonal = prev_right_diagonal >> 1;
+    const curr_no_goes = left_diagonal | right_diagonal | prev_x;
+    if (prev_y > (total_spaces / 2) and curr_no_goes == std.math.maxInt(TsType)) return;
 
-test "use other module" {
-    try std.testing.expectEqual(@as(i32, 150), lib.add(100, 50));
-}
+    var curr_placement: TsType = 1;
 
-test "fuzz example" {
-    const Context = struct {
-        fn testOne(context: @This(), input: []const u8) anyerror!void {
-            _ = context;
-            // Try passing `--fuzz` to `zig build test` and see if it manages to fail this test case!
-            try std.testing.expect(!std.mem.eql(u8, "canyoufindme", input));
+    inline for (0..total_spaces) |_| {
+        defer curr_placement <<= 1;
+        const new_set = curr_no_goes | curr_placement;
+        if (new_set == curr_no_goes) {} else if (prev_y == (total_spaces - 2)) {
+            total += 1;
+        } else {
+            place_queen(left_diagonal | curr_placement, right_diagonal | curr_placement, prev_x | curr_placement, prev_y + 1);
         }
-    };
-    try std.testing.fuzz(Context{}, Context.testOne, .{});
+    }
 }
-
-const std = @import("std");
-
-/// This imports the separate module containing `root.zig`. Take a look in `build.zig` for details.
-const lib = @import("n_queens_zig_lib");
