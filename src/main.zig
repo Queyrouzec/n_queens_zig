@@ -1,6 +1,3 @@
-//! By convention, main.zig is where your main function lives in the case that
-//! you are building an executable. If you are making a library, the convention
-//! is to delete this file and start with root.zig instead.
 const std = @import("std");
 const print = std.debug.print;
 
@@ -19,7 +16,7 @@ pub fn main() !void {
     }
     total *= 2;
     const stop = timer.read();
-    try stdout.print("\n\ntotal: {d}\nin {d} ns\nor\n{d} secs\n", .{ total, stop, stop / std.time.ns_per_s });
+    try stdout.print("\n\ntotal: {d}\nin\n{d} ns\n{d} us\n{d} ms\n{d} secs\n", .{ total, stop, stop / std.time.ns_per_us, stop / std.time.ns_per_ms, stop / std.time.ns_per_s });
 }
 
 fn place_queen(prev_left_diagonal: TsType, prev_right_diagonal: TsType, prev_x: TsType, comptime prev_y: TsType) void {
@@ -33,10 +30,12 @@ fn place_queen(prev_left_diagonal: TsType, prev_right_diagonal: TsType, prev_x: 
     inline for (0..total_spaces) |_| {
         defer curr_placement <<= 1;
         const new_set = curr_no_goes | curr_placement;
-        if (new_set == curr_no_goes) {} else if (prev_y == (total_spaces - 2)) {
-            total += 1;
-        } else {
-            place_queen(left_diagonal | curr_placement, right_diagonal | curr_placement, prev_x | curr_placement, prev_y + 1);
+        if (new_set != curr_no_goes) {
+            if (prev_y == (total_spaces - 2)) {
+                total += 1;
+            } else {
+                place_queen(left_diagonal | curr_placement, right_diagonal | curr_placement, prev_x | curr_placement, prev_y + 1);
+            }
         }
     }
 }
