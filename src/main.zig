@@ -3,7 +3,8 @@ const print = std.debug.print;
 
 var total: u32 = 0;
 
-const total_spaces = 16;
+const total_spaces: TsType = 16;
+const check_filled_spaces_at = total_spaces / 2;
 const TsType = u16;
 
 pub fn main() !void {
@@ -23,7 +24,7 @@ fn place_queen(prev_left_diagonal: TsType, prev_right_diagonal: TsType, prev_x: 
     const left_diagonal = prev_left_diagonal << 1;
     const right_diagonal = prev_right_diagonal >> 1;
     const curr_no_goes = left_diagonal | right_diagonal | prev_x;
-    if (prev_y > (total_spaces / 2) and curr_no_goes == std.math.maxInt(TsType)) return;
+    if (prev_y > check_filled_spaces_at and curr_no_goes == std.math.maxInt(TsType)) return;
 
     var curr_placement: TsType = 1;
 

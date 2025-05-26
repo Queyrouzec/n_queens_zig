@@ -31,6 +31,7 @@ pub fn build(b: *std.Build) void {
     const exe = b.addExecutable(.{
         .name = "n_queens_zig",
         .root_module = exe_mod,
+        .optimize = .ReleaseFast,
     });
 
     // This declares intent for the executable to be installed into the
